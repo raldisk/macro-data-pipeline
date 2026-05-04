@@ -1,0 +1,24 @@
+dataset: gold_macro_indicators
+version: 1
+# partition_key columns must exist in the silver DataFrame after silver→gold mapping.
+# period is the renamed period_date (DateType). Write partitions by this column.
+partition_key: [period]
+
+schema:
+  period: date
+  indicator_code: string
+  value: double
+  source: string
+
+quality_checks:
+  - check: no_nulls
+    columns: [period, indicator_code, value]
+  - check: row_count_min
+    value: 100
+  - check: value_range
+    column: value
+    min: -1000000
+    max: 1000000
+
+quarantine_on_failure: true
+hard_failure_threshold: 0.05

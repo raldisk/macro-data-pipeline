@@ -1,0 +1,24 @@
+dataset: gold_exchange_rates
+version: 1
+# partition_key columns must exist in the silver DataFrame.
+# period is the renamed period_date (DateType).
+partition_key: [period]
+
+schema:
+  period: date
+  currency_pair: string
+  rate: double
+  source: string
+
+quality_checks:
+  - check: no_nulls
+    columns: [period, currency_pair, rate]
+  - check: row_count_min
+    value: 20
+  - check: value_range
+    column: rate
+    min: 0.0001
+    max: 1000000
+
+quarantine_on_failure: true
+hard_failure_threshold: 0.05
