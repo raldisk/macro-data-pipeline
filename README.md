@@ -17,7 +17,7 @@ Data flows from public government sources through **Bronze → Silver → Gold**
 
 ## Table of Contents
 
-- [Why Two Folders](#why-two-folders)
+- [Repository Layout](#repository-layout)
 - [Architecture](#architecture)
 - [Quick Start](#quick-start)
 - [Service Endpoints](#service-endpoints)
@@ -26,22 +26,21 @@ Data flows from public government sources through **Bronze → Silver → Gold**
 - [Configuration](#configuration)
 - [Data Contracts](#data-contracts)
 - [Development](#development)
-- [Critical Patch](#critical-patch)
 - [Failure Modes](#failure-modes)
 - [Tech Stack](#tech-stack)
 
 ---
 
-## Why Two Folders
+## Repository Layout
 
 ```
 ph-macro-lakehouse/
-├── docker-compose.yml   ← single entry point for everything
-├── pipeline/            ← Python 3.11 · PySpark · Prefect · FastAPI
-└── dashboard/           ← Node 20 · React · Vite · TypeScript
+├── docker-compose.yml   ← run everything from here
+├── pipeline/            ← Python · PySpark · Prefect · FastAPI
+└── dashboard/           ← React · Vite · TypeScript
 ```
 
-`pipeline/` needs Java 17 for Spark and is managed by `pip`. `dashboard/` is managed by `npm`. They cannot share a package manager — the root `docker-compose.yml` wires them together at runtime.
+`pipeline/` and `dashboard/` use separate runtimes (Python + Java 17 vs Node 20) and cannot share a package manager. The root `docker-compose.yml` is the single entry point that wires both together.
 
 ---
 
@@ -106,7 +105,8 @@ docker compose up -d dashboard
 # → http://localhost:5173
 ```
 
-> **Before the chart works**, apply the [Critical Patch](#critical-patch) and rebuild: `docker compose up -d --build api`
+> ⚠️ **Known issue affecting dashboard data rendering** (`/gold/*/data` endpoint).
+> See [KNOWN_ISSUES.md](KNOWN_ISSUES.md) before starting the dashboard.
 
 ---
 
@@ -252,8 +252,8 @@ npm run dev   # http://localhost:5173 — proxies /api/* to localhost:8000
 
 ```bash
 cd pipeline
-pytest tests/unit/ -v                          # no infrastructure needed
-ENV=TEST pytest tests/ -v                      # full suite — needs Postgres + MinIO
+pytest tests/unit/ -v             # no infrastructure needed
+ENV=TEST pytest tests/ -v         # full suite — needs Postgres + MinIO
 ```
 
 ### Lint
@@ -264,69 +264,17 @@ ruff check src/ tests/ && black --check src/ tests/
 
 ---
 
-## Critical Patch
-
-> **Required before the dashboard chart will show data.** One file, two edits.
-
-`pipeline/src/api/routes/gold.py` has two assumptions that don't match actual pipeline output: it expects `s3://` paths but the pipeline writes `s3a://`, and it expects a single Parquet file but the pipeline writes a partitioned directory.
-
-**Fix `_parse_s3_path`:**
-
-```python
-def _parse_s3_path(s3_path: str) -> tuple[str, str]:
-    for prefix in ("s3a://", "s3://"):
-        if s3_path.startswith(prefix):
-            without_scheme = s3_path[len(prefix):]
-            break
-    else:
-        raise ValueError(f"Expected s3:// or s3a:// path, got: {s3_path!r}")
-    bucket, _, key = without_scheme.partition("/")
-    if not bucket or not key:
-        raise ValueError(f"Cannot parse bucket/key from: {s3_path!r}")
-    return bucket, key
-```
-
-**Fix `_read_parquet_from_s3`:**
-
-```python
-def _read_parquet_from_s3(s3_path: str) -> list[dict[str, Any]]:
-    bucket, prefix = _parse_s3_path(s3_path)
-    s3 = _s3_client()
-    paginator = s3.get_paginator("list_objects_v2")
-    keys = [
-        obj["Key"]
-        for page in paginator.paginate(Bucket=bucket, Prefix=prefix)
-        for obj in page.get("Contents", [])
-        if obj["Key"].endswith(".parquet")
-    ]
-    if not keys:
-        raise FileNotFoundError(f"No Parquet files under: s3://{bucket}/{prefix}")
-    rows: list[dict] = []
-    for key in keys:
-        buf = io.BytesIO(s3.get_object(Bucket=bucket, Key=key)["Body"].read())
-        for batch in pq.read_table(buf).to_batches():
-            for i in range(batch.num_rows):
-                row = {col: batch.column(col)[i].as_py() for col in batch.schema.names}
-                rows.append({k: v.isoformat() if hasattr(v, "isoformat") else v
-                             for k, v in row.items()})
-    return rows
-```
-
-Then rebuild: `docker compose up -d --build api`
-
----
-
 ## Failure Modes
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | `ValidationError: AWS_ACCESS_KEY_ID missing` | `pipeline/.env` not created | `cp pipeline/.env.example pipeline/.env` |
-| `/gold/*/data` returns 503 | Critical patch not applied or container not rebuilt | Apply patch → `docker compose up -d --build api` |
+| `/gold/*/data` returns 503 | Known issue — see [KNOWN_ISSUES.md](KNOWN_ISSUES.md) | Apply patch, rebuild `api` container |
 | `UnsupportedClassVersionError` | Java < 17 on native runs | Install Java 17, set `JAVA_HOME` |
-| Dashboard chart blank, no errors | Pipeline never run | Run `backfill` command, then reload |
+| Dashboard chart blank, no errors | Pipeline never run | Run `backfill` command, reload |
 | `prefect-worker` connection refused | `prefect-server` still booting (up to 120s) | Wait — worker retries automatically |
 | MinIO bucket not found | `minio-init` exited early | `docker compose up minio-init` |
-| `HardQualityFailure` | >5% rows failed quality checks | Check `/datasets/{name}/quality`, adjust `contracts/*.yaml`, re-run backfill |
+| `HardQualityFailure` | >5% rows failed quality checks | Check `/datasets/{name}/quality`, adjust `contracts/*.yaml`, re-run |
 
 ---
 
