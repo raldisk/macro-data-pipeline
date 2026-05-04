@@ -1,0 +1,49 @@
+series_code,period,value,unit,source
+CPI_ALL_ITEMS,2023M01,104.1,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M02,104.8,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M03,105.3,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M04,105.9,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M05,106.2,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M06,106.7,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M07,107.1,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M08,107.5,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M09,107.9,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M10,108.2,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M11,108.6,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2023M12,109.0,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M01,109.4,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M02,109.9,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M03,110.3,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M04,110.8,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M05,111.2,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M06,111.6,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M07,112.0,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M08,112.3,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M09,112.7,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M10,113.1,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M11,113.5,index (2018=100),psa_fixture
+CPI_ALL_ITEMS,2024M12,113.9,index (2018=100),psa_fixture
+CPI_YOY_CHANGE,2023M01,8.7,percent,psa_fixture
+CPI_YOY_CHANGE,2023M02,8.6,percent,psa_fixture
+CPI_YOY_CHANGE,2023M03,7.6,percent,psa_fixture
+CPI_YOY_CHANGE,2023M04,6.6,percent,psa_fixture
+CPI_YOY_CHANGE,2023M05,6.1,percent,psa_fixture
+CPI_YOY_CHANGE,2023M06,5.4,percent,psa_fixture
+CPI_YOY_CHANGE,2023M07,4.7,percent,psa_fixture
+CPI_YOY_CHANGE,2023M08,5.3,percent,psa_fixture
+CPI_YOY_CHANGE,2023M09,6.1,percent,psa_fixture
+CPI_YOY_CHANGE,2023M10,4.9,percent,psa_fixture
+CPI_YOY_CHANGE,2023M11,4.1,percent,psa_fixture
+CPI_YOY_CHANGE,2023M12,3.9,percent,psa_fixture
+CPI_YOY_CHANGE,2024M01,2.8,percent,psa_fixture
+CPI_YOY_CHANGE,2024M02,3.4,percent,psa_fixture
+CPI_YOY_CHANGE,2024M03,3.7,percent,psa_fixture
+CPI_YOY_CHANGE,2024M04,3.8,percent,psa_fixture
+CPI_YOY_CHANGE,2024M05,3.9,percent,psa_fixture
+CPI_YOY_CHANGE,2024M06,3.7,percent,psa_fixture
+CPI_YOY_CHANGE,2024M07,4.4,percent,psa_fixture
+CPI_YOY_CHANGE,2024M08,3.3,percent,psa_fixture
+CPI_YOY_CHANGE,2024M09,2.4,percent,psa_fixture
+CPI_YOY_CHANGE,2024M10,2.3,percent,psa_fixture
+CPI_YOY_CHANGE,2024M11,2.5,percent,psa_fixture
+CPI_YOY_CHANGE,2024M12,2.9,percent,psa_fixture
