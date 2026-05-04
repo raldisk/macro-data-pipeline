@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff black
+      - run: ruff check src/ tests/
+      - run: black --check src/ tests/
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - run: pytest tests/unit/ -v
+
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - run: pytest tests/contract/ -v
+
+  spark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: pip install -e ".[dev]"
+      - run: pytest tests/spark/ -v
+        env:
+          S3_ENDPOINT: ""
+          S3_BUCKET: ph-lakehouse-test
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: ap-southeast-1
+          DATABASE_URL: postgresql+asyncpg://lakehouse:lakehouse@localhost:5432/lakehouse_test
+          PREFECT_API_URL: http://localhost:4200/api
+          ENV: TEST
+
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: lakehouse_test
+          POSTGRES_USER: lakehouse
+          POSTGRES_PASSWORD: lakehouse
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]" psycopg2-binary
+      - name: Run migrations
+        run: psql postgresql://lakehouse:lakehouse@localhost:5432/lakehouse_test -f db/migrations/001_init.sql
+      - run: pytest tests/integration/ -v
+        env:
+          DATABASE_URL: postgresql+asyncpg://lakehouse:lakehouse@localhost:5432/lakehouse_test
+          S3_ENDPOINT: ""
+          S3_BUCKET: ph-lakehouse-test
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: ap-southeast-1
+          PREFECT_API_URL: http://localhost:4200/api
+          ENV: TEST
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t ph-lakehouse-pipeline:ci .
