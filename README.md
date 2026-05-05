@@ -7,7 +7,7 @@
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Docker](https://img.shields.io/badge/Docker-required-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/YOUR_USERNAME/ph-macro-lakehouse/ci.yml?branch=master&label=CI&style=for-the-badge&logo=github)](https://github.com/YOUR_USERNAME/ph-macro-lakehouse/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/raldisk/ph-macro-lakehouse/ci.yml?branch=master&label=CI&style=for-the-badge&logo=github)](https://github.com/raldisk/ph-macro-lakehouse/actions)
 
 > **Philippine Macroeconomic Data Lakehouse** — a production-grade batch pipeline for PSA CPI and BSP FX rates with a live monitoring dashboard.
 
@@ -15,8 +15,17 @@ Data flows from public government sources through **Bronze → Silver → Gold**
 
 ---
 
+## Ecosystem
+
+This lakehouse is the **upstream data quality layer** of a two-tier Philippine economic intelligence platform.
+
+**[ph-dashboard](https://github.com/raldisk/ph-dashboard)** is the downstream consumer — a multi-domain analytics platform covering ten Philippine economic datasets. It replaces its own BSP/PSA scraping pipelines with a lakehouse adapter that consumes `GET /gold/{dataset}/data`, retaining its legacy pipelines as automatic fallback when the lakehouse is unavailable.
+
+---
+
 ## Table of Contents
 
+- [Ecosystem](#ecosystem)
 - [Repository Layout](#repository-layout)
 - [Architecture](#architecture)
 - [Quick Start](#quick-start)
@@ -61,7 +70,7 @@ ph-macro-lakehouse/
 **Prerequisites:** [Docker 24+](https://docs.docker.com/get-docker/) with Compose v2.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ph-macro-lakehouse.git
+git clone https://github.com/raldisk/ph-macro-lakehouse.git
 cd ph-macro-lakehouse
 
 # Copy env files — defaults work for local MinIO, no edits needed
@@ -88,8 +97,8 @@ docker compose up -d dashboard
 # → http://localhost:5173
 ```
 
-> ⚠️ **Known issue affecting dashboard data rendering** (`/gold/*/data` endpoint).
-> See [KNOWN_ISSUES.md](KNOWN_ISSUES.md) before starting the dashboard.
+> ⚠️ **Known issue affecting dashboard data rendering** (`/gold/*/data` returns 503, chart stays blank).
+> See [KNOWN_ISSUES.md](KNOWN_ISSUES.md) and apply the patch before starting the dashboard.
 
 ---
 
