@@ -46,24 +46,7 @@ ph-macro-lakehouse/
 
 ## Architecture
 
-```
-PSA API + BSP HTML
-       │
-       ▼
-  Ingestion  (httpx · boto3)       SHA-256 dedup → Bronze Parquet
-       │
-       ▼
-  Transform  (PySpark 3.5)         Type cast · dedup → Silver Parquet (year/month)
-       │
-       ▼
-  Quality    (PySpark + YAML)      no_nulls · row_count · value_range → Gold Parquet
-       │                                                               → Quarantine
-       ▼
-  Metadata   (asyncpg · Postgres)  pipeline_runs · quality_results · dataset_versions
-       │
-       ▼
-  Serving    (FastAPI · PyArrow)   Reads Gold from S3 → JSON → Dashboard
-```
+![Architecture Diagram](docs/architecture.svg)
 
 **Key design rules:**
 - Postgres stores metadata only — all curated data lives in S3 as Parquet
