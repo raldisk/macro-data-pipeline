@@ -15,62 +15,11 @@ Data flows from public government sources through **Bronze → Silver → Gold**
 
 ---
 
-## Part of the Philippine Financial Data Platform
-
-| Repository | Role | Port |
-|---|---|---|
-| [econ-intel-platform](https://github.com/raldisk/econ-intel-platform) | Unified intelligence hub — downstream consumer of all enrichment edges | 8001 |
-| [ph-macro-lakehouse](https://github.com/raldisk/ph-macro-lakehouse) | Gold-layer macro data pipeline — FX rates and macro indicators via Parquet/S3 | **8000** |
-| [psx-equity-analytics](https://github.com/raldisk/psx-equity-analytics) | PSX equity microstructure analytics — VWAP, Amihud illiquidity, SARIMA trend | 8004 |
-| [bsp-credit-risk-warehouse](https://github.com/raldisk/bsp-credit-risk-warehouse) | BSP Circular 855 regulatory credit exposure DWH — monthly closed-period serving | 8003 |
-| [iso20022-settlement-engine](https://github.com/raldisk/iso20022-settlement-engine) | ISO 20022 pacs.008 interbank settlement ledger — daily bilateral PHP flow serving | 8002 |
-
-Each repository is independently deployable and self-sufficient. Cross-repo data flows are optional enrichment edges — any repository operates fully without its peers.
-
 ## Ecosystem
 
-This lakehouse is the **upstream gold-layer data provider** for the
-Philippine Financial Data Platform's unified intelligence layer.
+This lakehouse is the **upstream data quality layer** of a two-tier Philippine economic intelligence platform.
 
-**Self-sufficient:** This system operates fully independently regardless
-of whether any downstream consumer is active. The gold-layer serving API
-is used internally by the React/Vite dashboard (`dashboard/`) via direct
-FastAPI reads. The serving endpoints exist for downstream consumers and
-are not required for this system's own operation. No changes to this
-codebase are needed to support the integration — the gold endpoints
-already exist and serve data from the existing MinIO Parquet partitions.
-
-**Downstream consumer:**
-[econ-intel-platform](https://github.com/raldisk/econ-intel-platform)
-optionally calls two endpoints from this system's FastAPI (port 8000):
-
-- `GET /gold/gold_exchange_rates/data` — consumed by the `fx` pipeline
-  as a higher-fidelity alternative to direct BSP HTML scraping.
-- `GET /gold/gold_macro_indicators/data` — consumed by the `economic`
-  pipeline to provide lakehouse-processed macro indicators alongside
-  embedded PSA/World Bank data.
-
-When `econ-intel-platform` has `MACRO_LAKEHOUSE_URL` configured and
-this system is reachable, it receives gold-layer Parquet-backed data
-from the existing `/gold/{dataset_name}/data` endpoint. When this system
-is unreachable or `MACRO_LAKEHOUSE_URL` is unset, `econ-intel-platform`
-falls back silently to its embedded BSP/PSA pipelines — it does not
-require this system for core operation.
-
-**Port collision warning for single-machine development:** Both this
-system (R2) and `psx-equity-analytics` (R4) default to port **8000**.
-When running both locally on the same machine, remap R4 to port 8004
-(`uvicorn ... --port 8004`) and set
-`PSX_ANALYTICS_API_URL=http://localhost:8004` in `econ-intel-platform`'s
-`.env`. Leave this system on its existing port 8000 — no changes required
-here.
-
-**Data contracts:** See [`pipeline/contracts/`](pipeline/contracts/) for
-the authoritative schema of `gold_exchange_rates` and
-`gold_macro_indicators`. Downstream consumers must map field names
-against these contracts (`period`, `currency_pair`, `rate`, `source` for
-FX; `period`, `indicator_code`, `value`, `source` for macro indicators)
-rather than assuming column names independently.
+**[ph-dashboard](https://github.com/raldisk/ph-dashboard)** is the downstream consumer — a multi-domain analytics platform covering ten Philippine economic datasets. It replaces its own BSP/PSA scraping pipelines with a lakehouse adapter that consumes `GET /gold/{dataset}/data`, retaining its legacy pipelines as automatic fallback when the lakehouse is unavailable.
 
 ---
 
